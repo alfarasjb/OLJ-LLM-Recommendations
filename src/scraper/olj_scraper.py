@@ -7,6 +7,8 @@ from bs4 import BeautifulSoup, PageElement
 from tqdm import tqdm
 from dataclasses import dataclass
 
+from src.services.chat_model import ChatModel
+
 
 @dataclass
 class OLJJob:
@@ -17,6 +19,7 @@ class OLJJob:
 
 class OLJScraper:
     def __init__(self):
+        self.chat_model = ChatModel()
         self.base_url = 'https://www.onlinejobs.ph'
         self.max_pages = 15
         self.urls_today = self.get_jobs_today()
@@ -33,25 +36,26 @@ class OLJScraper:
             soup = BeautifulSoup(response.text, 'html.parser')
             overview = self.get_job_overview(soup)
             salary = overview['SALARY']
+
             if self.is_below_target_salary(salary):
                 continue
             # If passes salary, Get contents and check for relevance
             job_description = self.get_job_details(soup)
-            if not self.is_relevant(job_description):
-                continue
             title = soup.find('h1').get_text(strip=True)
+            if not self.is_relevant(title, job_description):
+                continue
+
             jobs.append(OLJJob(title=title, salary=salary, url=url))
         return jobs
 
-
-    def is_relevant(self, job_description: str):
+    def is_relevant(self, title: str, job_description: str):
         # Send this to chat gpt
-        return True
+        return self.chat_model.check_job_relevance(title, job_description)
 
     def is_below_target_salary(self, salary: str) -> bool:
         # Send this to chatgpt
         # If no currency, assume in Php
-        return False  # Temporary
+        return self.chat_model.check_salary_relevance(salary)
 
     def get_jobs_today(self):
         urls = []
