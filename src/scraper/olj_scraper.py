@@ -22,6 +22,7 @@ class OLJScraper:
         self.chat_model = ChatModel()
         self.base_url = 'https://www.onlinejobs.ph'
         self.max_pages = 15
+        self.max_jobs_to_process = 100
         self.urls_today = self.get_jobs_today()
 
     @staticmethod
@@ -31,23 +32,25 @@ class OLJScraper:
 
     def start(self):
         jobs = []
-        for i, url in enumerate(self.urls_today):
+        def get_olj_job_recommendation(url: str):
             response = requests.get(url)
             soup = BeautifulSoup(response.text, 'html.parser')
             overview = self.get_job_overview(soup)
             salary = overview['SALARY']
             is_above_target_salary = self.is_above_target_salary(salary)
             if not is_above_target_salary:
-                continue
-            # If passes salary, Get contents and check for relevance
+                return None
             job_description = self.get_job_details(soup)
             title = soup.find('h1').get_text(strip=True)
             # if not self.is_relevant(title, job_description):
-            #     continue
+            #   return None
+            return OLJJob(title=title, salary=salary, url=url)
 
-            jobs.append(OLJJob(title=title, salary=salary, url=url))
-            if i >= 3:
-                break
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(get_olj_job_recommendation, url) for url in tqdm(self.urls_today[:self.max_jobs_to_process])]
+            for future in futures:
+                if future:
+                    jobs.append(future.result())
         return jobs
 
     def is_relevant(self, title: str, job_description: str):
@@ -119,4 +122,5 @@ class OLJScraper:
 
 if __name__ == "__main__":
     olj = OLJScraper()
-    olj.start()
+    jobs = olj.start()
+    print(jobs)

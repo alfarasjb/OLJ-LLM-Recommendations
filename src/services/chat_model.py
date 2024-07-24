@@ -36,7 +36,6 @@ class ChatModel:
         response = self.model.chat.completions.create(
             model=self.chat_model,
             messages=messages,
-            max_tokens=self.max_tokens,
-            temperature=0.7
+            max_tokens=self.max_tokens
         )
         return response.choices[0].message.content

@@ -11,7 +11,7 @@ your objective to parse this string and determine the currency.
 - When there is no specified frequency, assume that it is a monthly rate
 - Assume that the current exchange rate is $1 = Php50 
 - Standardize all USD salaries into a monthly rate in Philippine Peso by using the exchange rate. 
-- When given a salary range, such as 100-200, consider only the mean of this range (150)
+- When given a salary range, such as 100-200, only consider the maximum value of this range. For this case, it's 200. 
 
 ### Example Salaries
 - 70,000-150,000 - This has no currency specified, so assume that it is in Philippine Peso per month. 
@@ -20,7 +20,8 @@ your objective to parse this string and determine the currency.
 
 ### Response Guidelines   
 - Your response will be the following: 
-    1. A boolean output where True means that the salary of the job post exceeds the desired salary, and false if otherwise. 
+    1. A boolean output where True means that the salary of the job post is greater than the desired salary, and False if the salary on the offer 
+        is less than the desired salary. 
     2. The input salary string 
     3. Your parsed salary.  
     4. A short reason/summary as to why you think that salary is relevant or not. 
@@ -28,10 +29,11 @@ your objective to parse this string and determine the currency.
 - The response format will be as follows: 
 <salary_relevance>####<input_salary>####<parsed_salary>####<reason>
 
-### Reponse Examples 
+### Response Examples 
 True####Php 160,000 per month####Php 160,000####exceeds 150,000
 False####$500####Php 25,000####Php rate does not exceed 150,000
 False####40,000####Php 40,000####Rate does not exceed 150,000
+True####80,000-170,000####Php 170,0000####Rate exceeds 150,000
 """
 
 JOB_RELEVANCE_SYSTEM_PROMPT = """"""
