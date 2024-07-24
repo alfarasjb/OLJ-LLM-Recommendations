@@ -31,31 +31,34 @@ class OLJScraper:
 
     def start(self):
         jobs = []
-        for url in self.urls_today:
+        for i, url in enumerate(self.urls_today):
             response = requests.get(url)
             soup = BeautifulSoup(response.text, 'html.parser')
             overview = self.get_job_overview(soup)
             salary = overview['SALARY']
-
-            if self.is_below_target_salary(salary):
+            is_above_target_salary = self.is_above_target_salary(salary)
+            if not is_above_target_salary:
                 continue
             # If passes salary, Get contents and check for relevance
             job_description = self.get_job_details(soup)
             title = soup.find('h1').get_text(strip=True)
-            if not self.is_relevant(title, job_description):
-                continue
+            # if not self.is_relevant(title, job_description):
+            #     continue
 
             jobs.append(OLJJob(title=title, salary=salary, url=url))
+            if i >= 3:
+                break
         return jobs
 
     def is_relevant(self, title: str, job_description: str):
         # Send this to chat gpt
         return self.chat_model.check_job_relevance(title, job_description)
 
-    def is_below_target_salary(self, salary: str) -> bool:
+    def is_above_target_salary(self, salary: str) -> bool:
         # Send this to chatgpt
         # If no currency, assume in Php
-        return self.chat_model.check_salary_relevance(salary)
+        # TODO: Improve prompt
+        return bool(self.chat_model.check_salary_relevance(salary))
 
     def get_jobs_today(self):
         urls = []

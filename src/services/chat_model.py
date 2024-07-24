@@ -8,6 +8,7 @@ Tasks:
 2. Determine if job post is relevant or matches the candidate's qualifications (Use job title and Job description)
 """
 
+
 class ChatModel:
     def __init__(self):
         self.chat_model = EnvVariables.chat_model()
@@ -15,7 +16,9 @@ class ChatModel:
         self.max_tokens = 4096
 
     def check_salary_relevance(self, salary: str):
-        return self.chat(SALARY_SYSTEM_PROMPT, salary)
+        value = self.chat(SALARY_SYSTEM_PROMPT, salary)
+        salary_relevance, input_salary, parsed_salary, reason = value.split('####')
+        return salary_relevance
 
     def check_job_relevance(self, title: str, description: str):
         user_prompt = f""" 
