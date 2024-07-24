@@ -17,7 +17,7 @@ class OLJScraper:
         self.job_seeker = job_seeker
         self.base_url = 'https://www.onlinejobs.ph'
         self.max_pages = 5
-        self.max_jobs_to_process = 20
+        self.max_jobs_to_process = 10
         self.urls_today = self.get_jobs_today()
 
     @staticmethod
@@ -52,10 +52,14 @@ class OLJScraper:
             return job_opportunity
 
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [executor.submit(get_olj_job_recommendation, url) for url in tqdm(self.urls_today[:self.max_jobs_to_process])]
-            for future in futures:
-                if future.result():
-                    jobs.append(future.result())
+            futures = [
+                executor.submit(get_olj_job_recommendation, url)
+                for url in tqdm(self.urls_today[:self.max_jobs_to_process], desc="Getting Job Recommendations")
+            ]
+            for future in tqdm(futures):
+                result = future.result()
+                if result:
+                    jobs.append(result)
         return jobs
 
     def is_relevant(self, job_opportunity: JobOpportunity) -> bool:

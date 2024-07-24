@@ -1,7 +1,10 @@
+import openai
 from openai import OpenAI
 from src.definitions.credentials import Credentials, EnvVariables
 from src.prompts.prompts import SALARY_SYSTEM_PROMPT, JOB_RELEVANCE_SYSTEM_PROMPT, JOB_RELEVANCE_USER_PROMPT
 from src.definitions.templates import JobOpportunity, JobSeeker
+from tenacity import retry, stop_after_attempt, retry_if_exception_type, wait_fixed
+from src.utils.decorators import decreasing_wait
 
 """ 
 Tasks: 
@@ -39,8 +42,10 @@ class ChatModel:
 
         )
         relevant, reason = self.chat(JOB_RELEVANCE_SYSTEM_PROMPT, user_prompt).split('####')
+        # print(f"Relevant: {relevant} Reason: {reason}")
         return relevant.strip().lower() == "true"
 
+    @retry(stop=stop_after_attempt(5), retry=retry_if_exception_type(openai.RateLimitError), wait=decreasing_wait)
     def chat(self, system_prompt: str, user_prompt: str) -> str:
         messages = [
             {"role": "system", "content": system_prompt},
