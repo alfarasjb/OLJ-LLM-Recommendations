@@ -1,12 +1,15 @@
 from openai import OpenAI
 from src.definitions.credentials import Credentials, EnvVariables
-from src.prompts.prompts import SALARY_SYSTEM_PROMPT, JOB_RELEVANCE_SYSTEM_PROMPT
+from src.prompts.prompts import SALARY_SYSTEM_PROMPT, JOB_RELEVANCE_SYSTEM_PROMPT, JOB_RELEVANCE_USER_PROMPT
+from src.definitions.templates import JobOpportunity, JobSeeker
 
 """ 
 Tasks: 
 1. Process Salary - Determine if target salary (since this is not structured) 
 2. Determine if job post is relevant or matches the candidate's qualifications (Use job title and Job description)
 """
+
+# TODO: Add retry and rate limit
 
 
 class ChatModel:
@@ -18,15 +21,25 @@ class ChatModel:
     def check_salary_relevance(self, salary: str):
         value = self.chat(SALARY_SYSTEM_PROMPT, salary)
         salary_relevance, input_salary, parsed_salary, reason = value.split('####')
-        return salary_relevance
+        return salary_relevance.strip().lower() == "true"
 
-    def check_job_relevance(self, title: str, description: str):
-        user_prompt = f""" 
-        {title}
-        
-        {description} 
-        """
-        return self.chat(JOB_RELEVANCE_SYSTEM_PROMPT, user_prompt)
+    def check_job_relevance(self, job_seeker: JobSeeker, job_opportunity: JobOpportunity):
+        user_prompt = JOB_RELEVANCE_USER_PROMPT.format(
+            CURRENT_POSITION=job_seeker.current_position,
+            INDUSTRY=job_seeker.industry,
+            YEARS_OF_EXPERIENCE=job_seeker.years_of_experience,
+            SKILLS=job_seeker.skills,
+            DESCRIPTION=job_seeker.profile,
+            DESIRED_SALARY=job_seeker.salary_expectation,
+            DESIRED_TYPE_OF_WORK=job_seeker.type_of_work.value,
+            JOB_TITLE=job_opportunity.job_title,
+            JOB_DESCRIPTION=job_opportunity.job_description,
+            SALARY=job_opportunity.salary,
+            TYPE_OF_WORK=job_opportunity.type_of_work.value
+
+        )
+        relevant, reason = self.chat(JOB_RELEVANCE_SYSTEM_PROMPT, user_prompt).split('####')
+        return relevant.strip().lower() == "true"
 
     def chat(self, system_prompt: str, user_prompt: str) -> str:
         messages = [

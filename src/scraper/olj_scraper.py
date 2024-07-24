@@ -5,24 +5,19 @@ from datetime import datetime as dt
 import requests
 from bs4 import BeautifulSoup, PageElement
 from tqdm import tqdm
-from dataclasses import dataclass
 
 from src.services.chat_model import ChatModel
-
-
-@dataclass
-class OLJJob:
-    title: str
-    salary: str
-    url: str
+from src.definitions.templates import JobOpportunity, JobSeeker
+from src.definitions.enums import TypeOfWork
 
 
 class OLJScraper:
-    def __init__(self):
+    def __init__(self, job_seeker: JobSeeker):
         self.chat_model = ChatModel()
+        self.job_seeker = job_seeker
         self.base_url = 'https://www.onlinejobs.ph'
-        self.max_pages = 15
-        self.max_jobs_to_process = 100
+        self.max_pages = 5
+        self.max_jobs_to_process = 20
         self.urls_today = self.get_jobs_today()
 
     @staticmethod
@@ -37,25 +32,35 @@ class OLJScraper:
             soup = BeautifulSoup(response.text, 'html.parser')
             overview = self.get_job_overview(soup)
             salary = overview['SALARY']
-            is_above_target_salary = self.is_above_target_salary(salary)
-            if not is_above_target_salary:
-                return None
+            type_of_work = TypeOfWork.work(overview['TYPE OF WORK'])
+
+            # is_above_target_salary = self.is_above_target_salary(salary)
+            # if not is_above_target_salary:
+            #     return None
             job_description = self.get_job_details(soup)
             title = soup.find('h1').get_text(strip=True)
-            # if not self.is_relevant(title, job_description):
-            #   return None
-            return OLJJob(title=title, salary=salary, url=url)
+            job_opportunity = JobOpportunity(
+                job_title=title,
+                job_description=job_description,
+                salary=salary,
+                type_of_work=type_of_work,
+                url=url
+            )
+            is_relevant = self.is_relevant(job_opportunity)
+            if not is_relevant:
+                return None
+            return job_opportunity
 
         with ThreadPoolExecutor(max_workers=10) as executor:
             futures = [executor.submit(get_olj_job_recommendation, url) for url in tqdm(self.urls_today[:self.max_jobs_to_process])]
             for future in futures:
-                if future:
+                if future.result():
                     jobs.append(future.result())
         return jobs
 
-    def is_relevant(self, title: str, job_description: str):
+    def is_relevant(self, job_opportunity: JobOpportunity) -> bool:
         # Send this to chat gpt
-        return self.chat_model.check_job_relevance(title, job_description)
+        return bool(self.chat_model.check_job_relevance(self.job_seeker, job_opportunity))
 
     def is_above_target_salary(self, salary: str) -> bool:
         # Send this to chatgpt
@@ -121,6 +126,15 @@ class OLJScraper:
 
 
 if __name__ == "__main__":
-    olj = OLJScraper()
+    job_seeker = JobSeeker(
+        current_position="AI Engineer",
+        industry="Software Development",
+        years_of_experience="1",
+        skills=["Python"],
+        profile="I am an experienced AI engineer with a focus on developing and deploying AI solutions to solve a client's business problems.",
+        salary_expectation="Php 150,000 / month",
+        type_of_work=TypeOfWork.FULL_TIME
+    )
+    olj = OLJScraper(job_seeker=job_seeker)
     jobs = olj.start()
     print(jobs)
