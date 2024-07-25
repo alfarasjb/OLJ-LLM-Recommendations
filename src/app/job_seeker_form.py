@@ -133,6 +133,8 @@ class JobSeekerForm:
 
     def clear_jobs(self):
         st.session_state.jobs = []
+        st.session_state.skills = []
+        st.session_state.jobs = []
         for key in self.keys:
             st.session_state[key] = ""
 
