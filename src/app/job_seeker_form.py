@@ -58,6 +58,8 @@ class JobSeekerForm:
                     self.jobs_screen()
                 except requests.exceptions.ConnectionError:
                     st.error("Connection Error. Please try again later.")
+                except Exception as e:
+                    st.error(f"Something went wrong..")
 
     """ 
     Screens 

@@ -34,7 +34,7 @@ class ChatModel:
             SKILLS=job_seeker.skills,
             DESCRIPTION=job_seeker.profile,
             DESIRED_SALARY=job_seeker.salary_expectation,
-            DESIRED_TYPE_OF_WORK=job_seeker.type_of_work.value,
+            DESIRED_TYPE_OF_WORK=job_seeker.type_of_work,
             JOB_TITLE=job_opportunity.job_title,
             JOB_DESCRIPTION=job_opportunity.job_description,
             SALARY=job_opportunity.salary,
