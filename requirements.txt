@@ -5,3 +5,4 @@ beautifulsoup4==4.12.3
 tqdm==4.66.4
 tenacity==8.4.1
 streamlit==1.36.0
+streamlit-tags==1.2.8

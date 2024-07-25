@@ -22,3 +22,5 @@ class JobOpportunity:
     salary: str
     type_of_work: TypeOfWork
     url: str
+
+

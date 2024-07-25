@@ -1,0 +1,29 @@
+[server]
+headless = true
+port = 8080
+enableCORS = false
+
+[theme]
+# Primary accent for interactive elements
+primaryColor = '#7792E3'
+
+# Background color for the main content area
+backgroundColor = '#DEE4E7'
+
+# Background color for sidebar and most interactive widgets
+# sidebarBackgroundColor = '#BCC2C5'  # Darker shade for sidebar
+
+# Border color for sidebar (optional)
+# sidebarBorderColor = '#A0A8AC'  # Slightly lighter or darker than sidebar background
+
+# Box shadow for sidebar (optional)
+sidebarBoxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)'  # Slightly darker shadow for more depth
+
+# Color used for text in the sidebar
+sidebarTextColor = '#FFFFFF'  # Lighter text color for contrast against darker sidebar
+
+# Color used for almost all text
+textColor = '#37474F'
+
+# Font family for all text in the app, except code blocks
+font = "sans serif"

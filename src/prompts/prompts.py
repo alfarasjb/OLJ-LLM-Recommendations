@@ -72,6 +72,8 @@ with a relevant job opening.
     - Type of Work: Full Time 
     
 ### Additional Considerations 
+    - If the job description salary field is ambiguous and does not have any numeric value, automatically flag that job as irrelevant. 
+    State the reason as no specified salary.
     - The job description does not have to match the candidate 100%, but must at least have a 50% match with the candidate 
     in terms of skills, qualifications, and salary expectations. 
     - Even if the candidate asks for a $20/hour salary, a $10/hour salary may still be relevant as long as the job description 
