@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Callable, Optional
+from typing import Callable, Optional, List, Any
 
 import streamlit as st
 from tenacity import RetryCallState
@@ -14,12 +14,29 @@ def decreasing_wait(retry_state: RetryCallState) -> float:
     return wait_time
 
 
-def job_seeker_info(title: str, callback: Optional[Callable] = None):
+def job_seeker_info(
+        title: str, reset_keys: List[str], callback: Optional[Callable] = None
+):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             st.title(title)
             func(*args, **kwargs)
-            st.button("Next", on_click=callback)
+            back_button, next_button, _ = st.columns([1, 1, 7])
+            next_button.button("Next", on_click=callback)
+            back_button.button("Back", on_click=reset, args=(reset_keys,))
         return wrapper
     return decorator
+
+
+def reset(keys: List[Any]):
+    for key in keys:
+        if isinstance(st.session_state[key], str):
+            st.session_state[key] = ""
+            continue
+        if isinstance(st.session_state[key], bool):
+            st.session_state[key] = False
+            continue
+        if isinstance(st.session_state[key], list):
+            st.session_state[key] = []
+            continue

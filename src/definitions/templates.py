@@ -24,3 +24,4 @@ class JobOpportunity:
     url: str
 
 
+PROFILE = ""

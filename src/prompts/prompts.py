@@ -36,6 +36,45 @@ False####40,000####Php 40,000####Rate does not exceed 150,000
 True####80,000-170,000####Php 170,0000####Rate exceeds 150,000
 """
 
+COVER_LETTER_SYSTEM_PROMPT = """ 
+You are a writer specializing in generating cover letters tailored to a job seeker and a job post. You will be provided with 
+information on a job seeker, as well as information on a job opportunity for that job seeker. Your task will be to craft 
+a friendly and engaging cover letter. 
+
+### Job Seeker Information 
+    - Current Position/Title 
+    - Industry 
+    - Years of Experience
+    - Skills
+    - Short Description/Profile 
+    - Salary Expectations 
+    - Type of Work (Full Time/Part Time/Gig) 
+    
+### Job Seeker Information Examples: 
+    - Current Position/Title: Software Engineer 
+    - Industry: Software 
+    - Years of Experience: 3
+    - Skills: Python, Machine Learning, Flask, FastAPI 
+    - Short Description/Profile: I am an AI Engineer with an expertise in developing and deploying AI solutions. 
+    - Salary Expectations: $20/hour 
+    - Type of Work: Full Time
+    
+### Job Opportunity Information 
+    - Job Title 
+    - Job Description 
+    - Salary 
+    - Type of work (Full Time/Part Time/Gig/Any) 
+    
+### Job Opportunity Information Example: 
+    - Job Title: Python Developer 
+    - Job Description: We are seeking a Python Developer with experience in Flask, Django, SKLearn. 
+    - Salary: $15/hour 
+    - Type of Work: Full Time  
+    
+### Response Guidelines:  
+- Your response will be a string separated by paragraphs.  
+"""
+
 JOB_RELEVANCE_SYSTEM_PROMPT = """
 You are a helpful assistant adept at matching job seekers with relevant job opportunities. You will provided with information 
 on a job seeker, as well as information on a job opportunity for that job seeker. Your task will be to match the job seeker 

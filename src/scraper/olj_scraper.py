@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 class OLJScraper:
-    def __init__(self, job_seeker: JobSeeker, search_keywords: Optional[List[str]]):
-        self.chat_model = ChatModel()
+    def __init__(self, chat_model: ChatModel, job_seeker: JobSeeker, search_keywords: Optional[List[str]]):
+        self.chat_model = chat_model
         self.job_seeker = job_seeker
         self.base_url = 'https://www.onlinejobs.ph'
-        self.max_pages = 1
-        self.max_jobs_to_process = 30
+        self.max_pages = 2
+        self.max_jobs_to_process = 50
         self.search_keywords = self.search_keywords_slug(search_keywords)
         self.urls_today = self.get_jobs_today()
 
@@ -63,7 +63,7 @@ class OLJScraper:
             return job_opportunity
 
         to_process = self.urls_today
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=20) as executor:
             futures = [
                 executor.submit(get_olj_job_recommendation, url)
                 for url in tqdm(to_process, desc="Getting Job Recommendations")
@@ -72,12 +72,33 @@ class OLJScraper:
                 result = future.result()
                 if result:
                     jobs.append(result)
+                    yield result
         logging.info(f"{len(jobs)} relevant jobs found.")
-        return jobs
+
+    def keywords_found(self, job_opportunity: JobOpportunity) -> bool:
+        for keyword in self.search_keywords:
+            match = re.search(keyword.lower(), job_opportunity.job_description.lower())
+            if match:
+                return True
+        return False
+
+    def skills_found(self, job_opportunity: JobOpportunity) -> bool:
+        for skills in self.job_seeker.skills:
+            match = re.search(skills.lower(), job_opportunity.job_description.lower())
+            if match:
+                return True
+        return len(self.job_seeker.skills) == 0
 
     def is_relevant(self, job_opportunity: JobOpportunity) -> bool:
         # Send this to chat gpt
-        return bool(self.chat_model.check_job_relevance(self.job_seeker, job_opportunity))
+        keywords_found = self.keywords_found(job_opportunity)
+        skills_found = self.skills_found(job_opportunity)
+        if keywords_found or skills_found:
+            chat_model_result = bool(self.chat_model.check_job_relevance(self.job_seeker, job_opportunity))
+            # logging.info(f"Chat model result: {chat_model_result}")
+            return chat_model_result
+        logging.info(f"No skills or search keywords found in job post: {job_opportunity.job_title}")
+        return False
 
     def get_jobs_today(self) -> List[str]:
         # Multi word search: Replace ' ' with +
@@ -94,7 +115,7 @@ class OLJScraper:
                 urls += self.get_job_urls_in_page(url)
             return urls
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=20) as executor:
             futures = [executor.submit(fetch_urls, page) for page in tqdm(range(self.max_pages))]
             for future in futures:
                 urls += future.result()
@@ -113,28 +134,30 @@ class OLJScraper:
             url = self.base_url + f"{job.find('a')['href']}"
             return url
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=20) as executor:
             futures = [executor.submit(get_url_from_job, job) for job in jobs]
             for future in futures:
                 url = future.result()
                 if url:
                     urls.append(url)
-
         return urls
 
-    def get_date_from_job_post(self, job: PageElement) -> dt:
+    @staticmethod
+    def get_date_from_job_post(job: PageElement) -> dt.date:
         date = job.find('em').get_text(strip=True)
         date_match = re.search(r'Posted on (\w+ \d{1,2}, \d{4})', date)
         date = date_match.group(1)
         date = dt.strptime(date, '%b %d, %Y').date()
         return date
 
-    def get_job_details(self, soup: BeautifulSoup) -> str:
+    @staticmethod
+    def get_job_details(soup: BeautifulSoup) -> str:
         job_description = soup.find('p', id='job-description')
         text = job_description.get_text(separator='\n', strip=True)
         return text
 
-    def get_job_overview(self, soup: BeautifulSoup) -> Dict[str, str]:
+    @staticmethod
+    def get_job_overview(soup: BeautifulSoup) -> Dict[str, str]:
         overview_card = soup.find('div', class_='card job-post shadow mb-4 mb-md-0')
         sections = overview_card.find_all('h3')
         mapping = {
@@ -142,4 +165,3 @@ class OLJScraper:
             for section in sections
         }
         return mapping
-

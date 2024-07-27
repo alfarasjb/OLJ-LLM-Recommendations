@@ -3,6 +3,7 @@ import logging
 import streamlit as st
 
 from src.app.job_seeker_form import JobSeekerForm
+from src.definitions.templates import TypeOfWork, PROFILE
 
 logger = logging.getLogger(__name__)
 
@@ -39,4 +40,19 @@ class App:
         return True
 
     def main(self):
+        # self.generate_test()
         self.job_seeker_form.main()
+
+    def generate_test(self):
+        st.session_state.current_position = "AI Engineer"
+        st.session_state.industry = "Software"
+        st.session_state.years_of_experience = "2"
+        st.session_state.salary_value = "10"
+        st.session_state.salary_complete = True
+        st.session_state.type_of_work_complete = True
+        st.session_state.type_of_work = "Any"
+        st.session_state.profile = PROFILE
+        st.session_state.skills = ["Python", "OpenAI", "Flask", "FastAPI", "BeautifulSoup", "Redis", "Streamlit"]
+        st.session_state.skills_complete = True
+        st.session_state.keywords = ["python"]
+        st.session_state.keywords_complete = True
