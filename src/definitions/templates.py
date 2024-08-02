@@ -24,4 +24,4 @@ class JobOpportunity:
     url: str
 
 
-PROFILE = ""
+PROFILE = """"""

@@ -125,6 +125,7 @@ class JobSeekerForm:
     def jobs_screen(self):
         st.title("Jobs")
         st.button("Go Back", on_click=self.clear_jobs)
+        st.session_state.is_loading = True
         if len(st.session_state.jobs_list) == 0:
             for job in st.session_state.jobs:
                 st.session_state.jobs_list.append(job)
@@ -135,6 +136,7 @@ class JobSeekerForm:
             for job in st.session_state.jobs_list:
                 with st.expander(job.job_title):
                     self.show_project_details(job)
+        st.session_state.is_loading = False
 
     def show_cover_letter(self):
         st.title("Cover Letter")
@@ -169,6 +171,8 @@ class JobSeekerForm:
             st.session_state.show_cover_letter = False
         if "cover_letter" not in st.session_state:
             st.session_state.cover_letter = ""
+        if "is_loading" not in st.session_state:
+            st.session_state.is_loading = False
 
         for key in self.keys:
             if key not in st.session_state:
@@ -184,14 +188,18 @@ class JobSeekerForm:
     def show_project_details(self, job: JobOpportunity):
         try:
             st.write(f'### {job.job_title}')
-            st.write(f"Read more: {job.url}")
+            st.markdown(f"[Read more]({job.url})")
             st.write(f"Salary: {job.salary}")
             st.write(f"Type of Work: {job.type_of_work.value}")
-            # st.button("Generate Cover Letter", key=job.job_description, on_click=self.on_click_generate_cover_letter, args=(st.session_state.job_seeker, job))
+            # st.button("Generate Cover Letter",
+            #           key=job.job_description,
+            #           on_click=self.on_click_generate_cover_letter,
+            #           args=(st.session_state.job_seeker, job))
         except Exception as e:
             logger.error(f"Error showing project details. Error: {e}")
 
     def on_click_generate_cover_letter(self, job_seeker: JobSeeker, job_opportunity: JobOpportunity):
+        # This is kinda buggy
         st.session_state.cover_letter = self.chat_model.generate_cover_letter(job_seeker=job_seeker, job_opportunity=job_opportunity)
         st.session_state.show_cover_letter = True
 
